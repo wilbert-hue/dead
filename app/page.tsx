@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, UserRound } from 'lucide-react'
 import type { PropositionTable } from '@/lib/excel-propositions-types'
 import { DEMO_CUSTOMER_INTEL_XLSX } from '@/lib/excel-propositions-types'
 import { tryLoadTablesFromPublicWorkbook } from '@/lib/load-propositions-client'
+import { applyDemoRows } from '@/lib/demo-rows'
 
 const NAV_TEAL = 'rgb(77 182 172)'
 const NAV_TEAL_BG = 'rgb(232 247 245)'
@@ -79,7 +80,8 @@ export default function DashboardPage() {
         }
 
         if (!cancelled) {
-          const finalTables = parsed && parsed.length === 3 ? parsed : emptyTablesFallback()
+          const base = parsed && parsed.length === 3 ? parsed : emptyTablesFallback()
+          const finalTables = applyDemoRows(base)
           setTables(finalTables)
           setError(tablesEmpty(finalTables) ? message : null)
           setExpectedHints(tablesEmpty(finalTables) ? hints : [])
@@ -88,7 +90,7 @@ export default function DashboardPage() {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : 'Failed to load data')
           setExpectedHints([])
-          setTables(emptyTablesFallback())
+          setTables(applyDemoRows(emptyTablesFallback()))
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -191,11 +193,13 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <h2 className="mb-5 text-xl font-bold text-slate-900">
-            Customer Intelligence Database
-          </h2>
+          <h2 className="text-xl font-bold text-slate-900">Customer Intelligence Database</h2>
+          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">
+            <span className="font-semibold">NOTE:</span> All the data in the dashboard is demo data.
+            No real world data is related to this.
+          </p>
 
-          <div className="space-y-6">
+          <div className="mt-6 space-y-6">
             {tables.map((table) => {
               const open = isOpen(table.title)
               const duplicateIntro =
