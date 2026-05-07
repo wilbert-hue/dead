@@ -1,7 +1,6 @@
 import type { PropositionTable } from '@/lib/excel-propositions-types'
 
-/** Demo row count (trimmed so the table does not end on a partial repeat). */
-const ROW_COUNT = 38
+const ROW_COUNT = 40
 
 /** Extra synthetic cells when the workbook has more columns than the base template (esp. Proposition 3). */
 const PAD_P1 = [

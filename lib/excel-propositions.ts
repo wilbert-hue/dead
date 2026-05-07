@@ -126,6 +126,52 @@ function sheetColumnCount(sheet: XLSX.WorkSheet, stringGrid: string[][]): number
   return Math.max(m, 1)
 }
 
+/** Rightmost column index (0-based) with any non-empty cell from header grid through body. */
+function lastNonEmptyColumnIndex(
+  stringGrid: string[][],
+  scanFromRow: number
+): number {
+  let max = -1
+  for (let r = scanFromRow; r < stringGrid.length; r++) {
+    const row = stringGrid[r] ?? []
+    row.forEach((cell, j) => {
+      if (String(cell).trim() !== '') max = Math.max(max, j)
+    })
+  }
+  return max
+}
+
+/** Synthetic placeholders from upward-fill — not a real workbook header. */
+function isSyntheticColumnHeader(label: string): boolean {
+  const t = label.trim()
+  return t === '' || /^column\s+\d+$/i.test(t)
+}
+
+/**
+ * True if column j is covered by header text (merged band and/or filled leaf label).
+ * Used to strip trailing Excel columns that only carry stray values / padding.
+ */
+function columnHasTitle(
+  headerRows: HeaderBandCell[][],
+  paddedHeaders: string[],
+  fullCols: number,
+  j: number
+): boolean {
+  const h = paddedHeaders[j] ?? ''
+  if (!isSyntheticColumnHeader(h)) return true
+  if (!headerRows.length) return false
+  for (const hr of headerRows) {
+    for (const cell of hr) {
+      const t = cell.text.trim()
+      if (!t) continue
+      const start = cell.startCol
+      const end = Math.min(fullCols, start + cell.colspan)
+      if (j >= start && j < end) return true
+    }
+  }
+  return false
+}
+
 /** Build `<thead>` rows honoring Excel !merges over the header band. */
 function buildMergedHeaderBand(
   sheet: XLSX.WorkSheet,
@@ -248,13 +294,34 @@ export function workbookToPropositionTables(input: Buffer | Uint8Array): Proposi
     const normalizedHeaders = buildHeadersFromGrid(stringGrid, headerRowIdx, scanTop)
 
     const sheetCols = sheetColumnCount(sheet, stringGrid)
-    const maxCols = Math.max(sheetCols, normalizedHeaders.length, 1)
+    const scanStartRow =
+      headerBandIndices.length > 0 ? headerBandIndices[0] : Math.max(0, headerRowIdx)
+    const bodyStart = dataRowIdx > 0 ? dataRowIdx : headerRowIdx + 1
+    const gridScanFrom =
+      dataRowIdx > 0 ? Math.min(scanStartRow, dataRowIdx) : scanStartRow
+    const lastUsedCol = lastNonEmptyColumnIndex(stringGrid, gridScanFrom)
+
+    let maxCols = Math.max(sheetCols, normalizedHeaders.length, 1)
+    if (lastUsedCol >= 0) {
+      maxCols = Math.min(maxCols, lastUsedCol + 1)
+    }
+
+    const fullCols = maxCols
+    const headerRowsFull = buildMergedHeaderBand(sheet, stringGrid, headerBandIndices, fullCols)
+    const paddedHeadersFull = Array.from({ length: fullCols }, (_, j) => normalizedHeaders[j] ?? `Column ${j + 1}`)
+
+    let lastKeep = fullCols - 1
+    while (
+      lastKeep >= 0 &&
+      !columnHasTitle(headerRowsFull, paddedHeadersFull, fullCols, lastKeep)
+    ) {
+      lastKeep -= 1
+    }
+    maxCols = lastKeep >= 0 ? lastKeep + 1 : 1
 
     const headerRows = buildMergedHeaderBand(sheet, stringGrid, headerBandIndices, maxCols)
+    const paddedHeaders = paddedHeadersFull.slice(0, maxCols)
 
-    const paddedHeaders = Array.from({ length: maxCols }, (_, j) => normalizedHeaders[j] ?? `Column ${j + 1}`)
-
-    const bodyStart = dataRowIdx > 0 ? dataRowIdx : headerRowIdx + 1
     const rows = stringGrid.slice(bodyStart).map((row) =>
       Array.from({ length: maxCols }, (_, j) => row[j] ?? '')
     )
