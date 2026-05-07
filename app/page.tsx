@@ -27,6 +27,24 @@ function emptyTablesFallback(): PropositionTable[] {
   }))
 }
 
+function emptyProposition3(): PropositionTable {
+  return {
+    title: 'Proposition 3',
+    sheetName: '',
+    sectionHeading: '',
+    sectionDescription: '',
+    headers: [],
+    headerRows: [],
+    rows: [],
+  }
+}
+
+/** Only Proposition 3 is shown in the UI (third workbook sheet). */
+function visiblePropositionTables(full: PropositionTable[]): PropositionTable[] {
+  const third = full[2]
+  return third ? [third] : [emptyProposition3()]
+}
+
 export default function DashboardPage() {
   const [tables, setTables] = useState<PropositionTable[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,16 +99,17 @@ export default function DashboardPage() {
 
         if (!cancelled) {
           const base = parsed && parsed.length === 3 ? parsed : emptyTablesFallback()
-          const finalTables = applyDemoRows(base)
-          setTables(finalTables)
-          setError(tablesEmpty(finalTables) ? message : null)
-          setExpectedHints(tablesEmpty(finalTables) ? hints : [])
+          const fullDemo = applyDemoRows(base)
+          const visible = visiblePropositionTables(fullDemo)
+          setTables(visible)
+          setError(tablesEmpty(visible) ? message : null)
+          setExpectedHints(tablesEmpty(visible) ? hints : [])
         }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : 'Failed to load data')
           setExpectedHints([])
-          setTables(applyDemoRows(emptyTablesFallback()))
+          setTables(visiblePropositionTables(applyDemoRows(emptyTablesFallback())))
         }
       } finally {
         if (!cancelled) setLoading(false)
