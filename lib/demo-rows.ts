@@ -2,9 +2,65 @@ import type { PropositionTable } from '@/lib/excel-propositions-types'
 
 const ROW_COUNT = 40
 
-function fitRow(row: string[], width: number): string[] {
+/** Extra synthetic cells when the workbook has more columns than the base template (esp. Proposition 3). */
+const PAD_P1 = [
+  'Operating budget cycle',
+  'Multi-site sourcing',
+  'Technical audit scheduled',
+  'NAFTA corridor',
+  'Stock agreement',
+  'Low alkali preference',
+  'Ship bulk',
+  'FOB basis',
+]
+
+const PAD_P2 = [
+  'Spec sheet v3.2',
+  'Inbound RFQ',
+  'Trial batch 40t',
+  'Six-month evaluation',
+  'Quality gates passed',
+  'Logistics: container',
+  'Payment Net 45',
+  'Incoterms DAP',
+]
+
+const PAD_P3 = [
+  'linkedin.com/in/refractory-procurement',
+  'Natural magnesite-based DBM',
+  'Synthetic / seawater-based DBM',
+  'Brucite-based DBM',
+  '93%–95.9%',
+  '96%–97.9%',
+  '90%–92.9%',
+  '>3.08 g/cm³',
+  '>3.05 g/cm³',
+  '>3.12 g/cm³',
+  'Brick',
+  'Castable',
+  'Gunning mix',
+  'Fine powder',
+  'Direct mill supply',
+  'Distributor channel',
+  'EPC package',
+  'Annual tender',
+  'Spot requirement',
+  'Pilot qualification',
+  'Technical review',
+  'EU / Middle East',
+  'Asia-Pacific',
+  'North America',
+  'Not disclosed',
+]
+
+function padRowToWidth(row: string[], width: number, rowIdx: number, pi: number): string[] {
   const next = [...row]
-  while (next.length < width) next.push('—')
+  const pool = pi === 0 ? PAD_P1 : pi === 1 ? PAD_P2 : PAD_P3
+  let k = 0
+  while (next.length < width) {
+    next.push(pool[(rowIdx * 5 + k) % pool.length])
+    k += 1
+  }
   return next.slice(0, width)
 }
 
@@ -153,7 +209,7 @@ export function applyDemoRows(tables: PropositionTable[]): PropositionTable[] {
     if (!w) return t
 
     const template = rowsForProposition(pi)
-    const rows = template.map((r) => fitRow(r, w))
+    const rows = template.map((r, i) => padRowToWidth(r, w, i, pi))
 
     return {
       ...t,
