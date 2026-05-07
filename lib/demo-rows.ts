@@ -1,44 +1,90 @@
 import type { PropositionTable } from '@/lib/excel-propositions-types'
 
+const DEMO_ROW_COUNT = 40
+
 function fitRow(row: string[], width: number): string[] {
   const next = [...row]
   while (next.length < width) next.push('—')
   return next.slice(0, width)
 }
 
-/** Synthetic buyer rows per proposition; trimmed/padded to match live column count. */
-const DEMO_ROWS: string[][][] = [
-  [
-    ['1', 'Northpeak Refractory Works', '1994', 'Pittsburgh, PA', '$312', 'Iron & Steel', 'Ladle Linings', 'Operating'],
-    ['2', 'EuroKiln Refractories GmbH', '2001', 'Düsseldorf, Germany', '$285', 'Cement & Lime', 'Cement Kiln Linings', 'Expansion'],
-    ['3', 'Pacific Flux Industries', '1988', 'Busan, South Korea', '$410', 'Refractory Manufacturing', 'Basic Brick Mfg', 'Operating'],
-    ['4', 'Harbor Steel Refractory Co.', '2009', 'Rotterdam, NL', '$156', 'Iron & Steel', 'Others', 'New Project'],
-    ['5', 'Andes Magnesia Partners', '1999', 'São Paulo, Brazil', '$228', 'Others', 'Basic Brick Mfg', 'Operating'],
-    ['6', 'Arctic Linings AS', '2012', 'Bergen, Norway', '$142', 'Iron & Steel', 'Ladle Linings', 'Operating'],
-    ['7', 'Desert Refractory Holdings', '2005', 'Dubai, UAE', '$198', 'Cement & Lime', 'Others', 'Operating'],
-    ['8', 'Crescent Technical Ceramics', '2016', 'İzmir, Turkey', '$267', 'Refractory Manufacturing', 'Cement Kiln Linings', 'Expansion'],
-  ],
-  [
-    ['1', 'Northpeak Refractory Works', '1994', 'Pittsburgh, PA', '$312', 'Iron & Steel', 'High purity DBM', 'Slip casting', 'Technical sales lead', 'Qualified', 'Large'],
-    ['2', 'EuroKiln Refractories GmbH', '2001', 'Düsseldorf, Germany', '$285', 'Cement & Lime', 'Standard DBM grades', 'Dry pressing', 'Procurement manager', 'Pilot trial', 'Medium'],
-    ['3', 'Pacific Flux Industries', '1988', 'Busan, South Korea', '$410', 'Iron & Steel', 'MgO-rich blends', 'Iso-static', 'Plant engineer', 'Qualified', 'Large'],
-    ['4', 'Harbor Steel Refractory Co.', '2009', 'Rotterdam, NL', '$156', 'Iron & Steel', 'Basic mixes', 'Casting', 'Buyer', 'Discovery', 'Small'],
-    ['5', 'Andes Magnesia Partners', '1999', 'São Paulo, Brazil', '$228', 'Others', 'Custom sizing', 'Extrusion', 'Category manager', 'Qualified', 'Medium'],
-    ['6', 'Arctic Linings AS', '2012', 'Bergen, Norway', '$142', 'Iron & Steel', 'Dense brick grades', 'Dry pressing', 'Maintenance head', 'Pilot trial', 'Small'],
-    ['7', 'Desert Refractory Holdings', '2005', 'Dubai, UAE', '$198', 'Cement & Lime', 'Kiln lining specs', 'Casting', 'Procurement', 'Qualified', 'Medium'],
-    ['8', 'Crescent Technical Ceramics', '2016', 'İzmir, Turkey', '$267', 'Refractory Manufacturing', 'Fine MgO powders', 'Spray drying', 'R&D contact', 'Pilot trial', 'Large'],
-  ],
-  [
-    ['1', 'Northpeak Refractory Works', '1994', 'Pittsburgh, PA', '$312', 'Iron & Steel', 'DBM 97%', '>3.10', 'Brick', 'Direct', 'Annual tender', 'Qualified'],
-    ['2', 'EuroKiln Refractories GmbH', '2001', 'Düsseldorf, Germany', '$285', 'Cement & Lime', 'DBM 95%', '>3.05', 'Castable', 'Distributor', 'Spot buys', 'Pilot'],
-    ['3', 'Pacific Flux Industries', '1988', 'Busan, South Korea', '$410', 'Iron & Steel', 'DBM HT', '>3.12', 'Gunning', 'Direct', 'Framework', 'Qualified'],
-    ['4', 'Harbor Steel Refractory Co.', '2009', 'Rotterdam, NL', '$156', 'Iron & Steel', 'DBM standard', '>3.00', 'Brick', 'Multi-vendor', 'RFQ stage', 'Discovery'],
-    ['5', 'Andes Magnesia Partners', '1999', 'São Paulo, Brazil', '$228', 'Others', 'Custom MgO', '>3.08', 'Powder', 'Agent', 'Project-based', 'Pilot'],
-    ['6', 'Arctic Linings AS', '2012', 'Bergen, Norway', '$142', 'Iron & Steel', 'DBM 96%', '>3.06', 'Brick', 'Direct', 'Maintenance budget', 'Qualified'],
-    ['7', 'Desert Refractory Holdings', '2005', 'Dubai, UAE', '$198', 'Cement & Lime', 'DBM 94%', '>3.04', 'Castable', 'EPC', 'Annual', 'Qualified'],
-    ['8', 'Crescent Technical Ceramics', '2016', 'İzmir, Turkey', '$267', 'Refractory Manufacturing', 'Fine DBM', '>3.11', 'Powder', 'Direct', 'R&D samples', 'Pilot'],
-  ],
-]
+function buildP1Rows(): string[][] {
+  const industries = ['Iron & Steel', 'Cement & Lime', 'Refractory Manufacturing', 'Others']
+  const subs = ['Ladle Linings', 'Cement Kiln Linings', 'Basic Brick Mfg', 'Others']
+  const status = ['Operating', 'Expansion', 'New Project', 'Operating']
+  return Array.from({ length: DEMO_ROW_COUNT }, (_, i) => {
+    const n = i + 1
+    return [
+      String(n),
+      `Demo Refractory Buyer ${n}`,
+      String(1985 + (i % 32)),
+      `Demo Metro ${(i % 18) + 1}, Demo Region ${(i % 7) + 1}`,
+      `$${140 + ((i * 23) % 520)}`,
+      industries[i % industries.length],
+      subs[i % subs.length],
+      status[i % status.length],
+    ]
+  })
+}
+
+function buildP2Rows(): string[][] {
+  const grades = ['High purity DBM', 'Standard DBM grades', 'MgO-rich blends', 'Basic mixes', 'Custom sizing']
+  const forms = ['Slip casting', 'Dry pressing', 'Iso-static', 'Casting', 'Extrusion']
+  const roles = ['Technical sales lead', 'Procurement manager', 'Plant engineer', 'Buyer', 'Category manager']
+  const stages = ['Qualified', 'Pilot trial', 'Discovery', 'Qualified', 'Pilot trial']
+  const sizes = ['Large', 'Medium', 'Small', 'Medium', 'Large']
+
+  return Array.from({ length: DEMO_ROW_COUNT }, (_, i) => {
+    const n = i + 1
+    return [
+      String(n),
+      `Demo Refractory Buyer ${n}`,
+      String(1988 + (i % 28)),
+      `Demo Metro ${(i % 18) + 1}, Demo Region ${(i % 7) + 1}`,
+      `$${130 + ((i * 19) % 480)}`,
+      i % 3 === 0 ? 'Iron & Steel' : i % 3 === 1 ? 'Cement & Lime' : 'Others',
+      grades[i % grades.length],
+      forms[i % forms.length],
+      roles[i % roles.length],
+      stages[i % stages.length],
+      sizes[i % sizes.length],
+    ]
+  })
+}
+
+function buildP3Rows(): string[][] {
+  const grades = ['DBM 97%', 'DBM 95%', 'DBM HT', 'DBM standard', 'Custom MgO', 'DBM 96%', 'DBM 94%', 'Fine DBM']
+  const density = ['>3.10', '>3.05', '>3.12', '>3.00', '>3.08', '>3.06', '>3.04', '>3.11']
+  const forms = ['Brick', 'Castable', 'Gunning', 'Brick', 'Powder', 'Brick', 'Castable', 'Powder']
+  const routes = ['Direct', 'Distributor', 'Direct', 'Multi-vendor', 'Agent', 'Direct', 'EPC', 'Direct']
+  const buys = ['Annual tender', 'Spot buys', 'Framework', 'RFQ stage', 'Project-based', 'Maintenance budget', 'Annual', 'R&D samples']
+  const stages = ['Qualified', 'Pilot', 'Qualified', 'Discovery', 'Pilot', 'Qualified', 'Qualified', 'Pilot']
+
+  return Array.from({ length: DEMO_ROW_COUNT }, (_, i) => {
+    const n = i + 1
+    const j = i % grades.length
+    return [
+      String(n),
+      `Demo Refractory Buyer ${n}`,
+      String(1990 + (i % 26)),
+      `Demo Metro ${(i % 18) + 1}, Demo Region ${(i % 7) + 1}`,
+      `$${150 + ((i * 21) % 500)}`,
+      i % 4 === 0 ? 'Iron & Steel' : i % 4 === 1 ? 'Cement & Lime' : i % 4 === 2 ? 'Refractory Manufacturing' : 'Others',
+      grades[j],
+      density[j],
+      forms[j],
+      routes[j],
+      buys[j],
+      stages[j],
+    ]
+  })
+}
+
+function demoRowsForProposition(pi: number): string[][] {
+  if (pi === 0) return buildP1Rows()
+  if (pi === 1) return buildP2Rows()
+  return buildP3Rows()
+}
 
 /** Replace body rows with illustrative demo values; keeps Excel headers as-is. */
 export function applyDemoRows(tables: PropositionTable[]): PropositionTable[] {
@@ -46,7 +92,7 @@ export function applyDemoRows(tables: PropositionTable[]): PropositionTable[] {
     const w = t.headers.length
     if (!w) return t
 
-    const template = DEMO_ROWS[pi] ?? DEMO_ROWS[0]
+    const template = demoRowsForProposition(pi)
     const rows = template.map((r) => fitRow(r, w))
 
     return {
